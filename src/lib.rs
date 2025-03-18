@@ -8,40 +8,36 @@
 //! Simplest possible Alexa "Hello, World" skill:
 //!
 //! ```rust
-//! extern crate lambda_runtime as lambda;
-//! extern crate alexa_sdk;
-//!
-//! use lambda::{lambda, Context, error::HandlerError};
+//! use lambda_runtime::{service_fn, Error, LambdaEvent};
 //! use alexa_sdk::{Request,Response};
-//! use std::error::Error;
 //!
-//! fn my_handler(_req: Request, _ctx: Context) -> Result<Response,HandlerError> {
+//! async fn my_handler(event: LambdaEvent<Request>) -> Result<Response, Error> {
+//!     let (_req, _ctx) = event.into_parts();
 //!     Ok(Response::simple("hello", "hello world"))
 //! }
 //!
-//! fn main() -> Result<(), Box<dyn Error>> {
-//!     lambda!(my_handler);
-//!
+//! # #[cfg(feature = "doctest")]
+//! #[tokio::main]
+//! async fn main() -> Result<(), Error> {
+//!     lambda_runtime::run(service_fn(my_handler)).await?;
 //!     Ok(())
 //! }
+//! 
+//! # fn main() {}
 //! ```
 //!
 //! A more complete skill, handling multiple locales and a slot:
 //!
 //! ```rust
-//! extern crate lambda_runtime as lambda;
-//! extern crate alexa_sdk;
-//!
-//! use lambda::{lambda, Context, error::HandlerError};
+//! use lambda_runtime::{service_fn, Error, LambdaEvent};
 //! use alexa_sdk::{Request,Response};
 //! use alexa_sdk::request::{IntentType, Locale};
-//! use std::error::Error;
 //!
-//! fn handle_help(_req: &Request) -> Result<Response,HandlerError> {
+//! fn handle_help(_req: &Request) -> Result<Response,Error> {
 //!     Ok(Response::simple("hello", "to say hello, tell me: say hello to someone"))
 //! }
 //!
-//! fn handle_hello(req: &Request) -> Result<Response,HandlerError> {
+//! fn handle_hello(req: &Request) -> Result<Response,Error> {
 //!     let res = match req.locale() {
 //!         Locale::AustralianEnglish => Response::simple("hello", "G'day mate"),
 //!         Locale::German => Response::simple("hello", "Hallo Welt"),
@@ -55,27 +51,31 @@
 //!     Ok(res)
 //! }
 //!
-//! fn handle_cancel(_req: &Request) -> Result<Response,HandlerError> {
+//! fn handle_cancel(_req: &Request) -> Result<Response,Error> {
 //!     Ok(Response::end())
 //! }
 //!
-//! fn my_handler(req: Request, _ctx: Context) -> Result<Response,HandlerError> {
+//! async fn my_handler(event: LambdaEvent<Request>) -> Result<Response,Error> {
+//!     let (req, _ctx) = event.into_parts();
 //!     match req.intent() {
 //!         IntentType::Help => handle_help(&req),
 //!         IntentType::User(_) => handle_hello(&req),
 //!         _ => handle_cancel (&req)
 //!     }
 //! }
-//!
-//! fn main() -> Result<(), Box<dyn Error>> {
-//!     lambda!(my_handler);
-//!
+//! 
+//! # #[cfg(feature = "doctest")]
+//! #[tokio::main]
+//! async fn main() -> Result<(), Error> {
+//!     lambda_runtime::run(service_fn(my_handler)).await?;
 //!     Ok(())
 //! }
+//! 
+//! # fn main() {}
 //! ```
 
 pub mod request;
 pub mod response;
 
-pub use self::request::{Request};
-pub use self::response::{Response};
+pub use self::request::Request;
+pub use self::response::Response;

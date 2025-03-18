@@ -340,360 +340,334 @@ impl Request {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::*;
 
     #[test]
     fn test_version() {
-        let p: Result<Request, serde_json::Error> = self::serde_json::from_str(default_req());
-        match p {
-            Ok(req) => assert_eq!(req.version, "1.0"),
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(default_req()).unwrap();
+        assert_eq!(req.version, "1.0");
     }
 
     #[test]
     fn test_locale() {
-        let p: Result<Request, serde_json::Error> = self::serde_json::from_str(default_req());
-        match p {
-            Ok(req) => assert_eq!(req.locale(), Locale::AmericanEnglish),
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(default_req()).unwrap();
+        assert_eq!(req.locale(), Locale::AmericanEnglish);
     }
 
     #[test]
     fn test_is_english() {
-        let p: Result<Request, serde_json::Error> = self::serde_json::from_str(default_req());
-        match p {
-            Ok(req) => assert!(req.locale().is_english()),
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(default_req()).unwrap();
+        assert!(req.locale().is_english());
     }
 
     #[test]
     fn test_is_spanish() {
-        let p: Result<Request, serde_json::Error> =
-            self::serde_json::from_str(default_spanish_req());
-        match p {
-            Ok(req) => assert!(req.locale().is_spanish()),
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(default_spanish_req()).unwrap();
+        assert!(req.locale().is_spanish());
     }
 
     #[test]
     fn test_is_french() {
-        let p: Result<Request, serde_json::Error> =
-            self::serde_json::from_str(default_french_req());
-        match p {
-            Ok(req) => assert!(req.locale().is_french()),
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(default_french_req()).unwrap();
+        assert!(req.locale().is_french());
     }
+
     #[test]
     fn test_intent() {
-        let p: Result<Request, serde_json::Error> = self::serde_json::from_str(default_req());
-        match p {
-            Ok(req) => assert_eq!(req.intent(), IntentType::User(String::from("hello"))),
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(default_req()).unwrap();
+        assert_eq!(req.intent(), IntentType::User(String::from("hello")));
     }
 
     #[test]
     fn test_slot() {
-        let p: Result<Request, serde_json::Error> = self::serde_json::from_str(req_with_slots());
-        match p {
-            Ok(req) => assert_eq!(req.slot_value("name"), Some(String::from("bob"))),
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(req_with_slots()).unwrap();
+        assert_eq!(req.slot_value("name"), Some(String::from("bob")));
     }
 
     #[test]
     fn test_attribute() {
-        let p: Result<Request, serde_json::Error> = self::serde_json::from_str(default_req());
-        match p {
-            Ok(req) => {
-                assert!(req.session.is_some());
-                assert!(req.session.unwrap().attributes.is_some());
-            }
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(default_req()).unwrap();
+        assert!(req.session.is_some());
+        assert!(req.session.unwrap().attributes.is_some());
     }
 
     #[test]
     fn test_attribute_val() {
-        let p: Result<Request, serde_json::Error> = self::serde_json::from_str(default_req());
-        match p {
-            Ok(req) => assert_eq!(
-                req.attribute_value("lastSpeech"),
-                Some(&String::from(
-                    "Jupiter has the shortest day of all the planets"
-                ))
-            ),
-            Err(e) => panic!(e.to_string()),
-        }
+        let req: Request = serde_json::from_value(default_req()).unwrap();
+        assert_eq!(
+            req.attribute_value("lastSpeech"),
+            Some(&String::from(
+                "Jupiter has the shortest day of all the planets"
+            ))
+        );
     }
 
-    fn default_spanish_req() -> &'static str {
-        r#"{
-	"version": "1.0",
-	"session": {
-		"new": true,
-		"sessionId": "amzn1.echo-api.session.abc123",
-		"application": {
-			"applicationId": "amzn1.ask.skill.myappid"
-		},
-        "attributes": {
-            "lastSpeech": "Jupiter has the shortest day of all the planets"
-        },
-		"user": {
-			"userId": "amzn1.ask.account.theuserid"
-		}
-	},
-	"context": {
-		"System": {
-			"application": {
-				"applicationId": "amzn1.ask.skill.myappid"
-			},
-			"user": {
-				"userId": "amzn1.ask.account.theuserid"
-			},
-			"device": {
-				"deviceId": "amzn1.ask.device.superfakedevice",
-				"supportedInterfaces": {}
-			},
-			"apiEndpoint": "https://api.amazonalexa.com",
-			"apiAccessToken": "53kr14t.k3y.d4t4-otherstuff"
-		},
-		"Viewport": {
-			"experiences": [
-				{
-					"arcMinuteWidth": 246,
-					"arcMinuteHeight": 144,
-					"canRotate": false,
-					"canResize": false
-				}
-			],
-			"shape": "RECTANGLE",
-			"pixelWidth": 1024,
-			"pixelHeight": 600,
-			"dpi": 160,
-			"currentPixelWidth": 1024,
-			"currentPixelHeight": 600,
-			"touch": [
-				"SINGLE"
-			]
-		}
-	},
-	"request": {
-		"type": "IntentRequest",
-		"requestId": "amzn1.echo-api.request.b8b49fde-4370-423f-bbb0-dc7305b788a0",
-		"timestamp": "2018-12-03T00:33:58Z",
-		"locale": "es-MX",
-		"intent": {
-			"name": "hello",
-			"confirmationStatus": "NONE"
-		}
-	}
-}"#
-    }
-    fn default_french_req() -> &'static str {
-        r#"{
-	"version": "1.0",
-	"session": {
-		"new": true,
-		"sessionId": "amzn1.echo-api.session.abc123",
-		"application": {
-			"applicationId": "amzn1.ask.skill.myappid"
-		},
-        "attributes": {
-            "lastSpeech": "Jupiter has the shortest day of all the planets"
-        },
-		"user": {
-			"userId": "amzn1.ask.account.theuserid"
-		}
-	},
-	"context": {
-		"System": {
-			"application": {
-				"applicationId": "amzn1.ask.skill.myappid"
-			},
-			"user": {
-				"userId": "amzn1.ask.account.theuserid"
-			},
-			"device": {
-				"deviceId": "amzn1.ask.device.superfakedevice",
-				"supportedInterfaces": {}
-			},
-			"apiEndpoint": "https://api.amazonalexa.com",
-			"apiAccessToken": "53kr14t.k3y.d4t4-otherstuff"
-		},
-		"Viewport": {
-			"experiences": [
-				{
-					"arcMinuteWidth": 246,
-					"arcMinuteHeight": 144,
-					"canRotate": false,
-					"canResize": false
-				}
-			],
-			"shape": "RECTANGLE",
-			"pixelWidth": 1024,
-			"pixelHeight": 600,
-			"dpi": 160,
-			"currentPixelWidth": 1024,
-			"currentPixelHeight": 600,
-			"touch": [
-				"SINGLE"
-			]
-		}
-	},
-	"request": {
-		"type": "IntentRequest",
-		"requestId": "amzn1.echo-api.request.b8b49fde-4370-423f-bbb0-dc7305b788a0",
-		"timestamp": "2018-12-03T00:33:58Z",
-		"locale": "fr-CA",
-		"intent": {
-			"name": "hello",
-			"confirmationStatus": "NONE"
-		}
-	}
-}"#
-    }
-    fn default_req() -> &'static str {
-        r#"{
-	"version": "1.0",
-	"session": {
-		"new": true,
-		"sessionId": "amzn1.echo-api.session.abc123",
-		"application": {
-			"applicationId": "amzn1.ask.skill.myappid"
-		},
-        "attributes": {
-            "lastSpeech": "Jupiter has the shortest day of all the planets"
-        },
-		"user": {
-			"userId": "amzn1.ask.account.theuserid"
-		}
-	},
-	"context": {
-		"System": {
-			"application": {
-				"applicationId": "amzn1.ask.skill.myappid"
-			},
-			"user": {
-				"userId": "amzn1.ask.account.theuserid"
-			},
-			"device": {
-				"deviceId": "amzn1.ask.device.superfakedevice",
-				"supportedInterfaces": {}
-			},
-			"apiEndpoint": "https://api.amazonalexa.com",
-			"apiAccessToken": "53kr14t.k3y.d4t4-otherstuff"
-		},
-		"Viewport": {
-			"experiences": [
-				{
-					"arcMinuteWidth": 246,
-					"arcMinuteHeight": 144,
-					"canRotate": false,
-					"canResize": false
-				}
-			],
-			"shape": "RECTANGLE",
-			"pixelWidth": 1024,
-			"pixelHeight": 600,
-			"dpi": 160,
-			"currentPixelWidth": 1024,
-			"currentPixelHeight": 600,
-			"touch": [
-				"SINGLE"
-			]
-		}
-	},
-	"request": {
-		"type": "IntentRequest",
-		"requestId": "amzn1.echo-api.request.b8b49fde-4370-423f-bbb0-dc7305b788a0",
-		"timestamp": "2018-12-03T00:33:58Z",
-		"locale": "en-US",
-		"intent": {
-			"name": "hello",
-			"confirmationStatus": "NONE"
-		}
-	}
-}"#
+    fn default_spanish_req() -> serde_json::Value {
+        json!({
+            "version": "1.0",
+            "session": {
+                "new": true,
+                "sessionId": "amzn1.echo-api.session.abc123",
+                "application": {
+                    "applicationId": "amzn1.ask.skill.myappid"
+                },
+                "attributes": {
+                    "lastSpeech": "Jupiter has the shortest day of all the planets"
+                },
+                "user": {
+                    "userId": "amzn1.ask.account.theuserid"
+                }
+            },
+            "context": {
+                "System": {
+                    "application": {
+                        "applicationId": "amzn1.ask.skill.myappid"
+                    },
+                    "user": {
+                        "userId": "amzn1.ask.account.theuserid"
+                    },
+                    "device": {
+                        "deviceId": "amzn1.ask.device.superfakedevice",
+                        "supportedInterfaces": {}
+                    },
+                    "apiEndpoint": "https://api.amazonalexa.com",
+                    "apiAccessToken": "53kr14t.k3y.d4t4-otherstuff"
+                },
+                "Viewport": {
+                    "experiences": [
+                        {
+                            "arcMinuteWidth": 246,
+                            "arcMinuteHeight": 144,
+                            "canRotate": false,
+                            "canResize": false
+                        }
+                    ],
+                    "shape": "RECTANGLE",
+                    "pixelWidth": 1024,
+                    "pixelHeight": 600,
+                    "dpi": 160,
+                    "currentPixelWidth": 1024,
+                    "currentPixelHeight": 600,
+                    "touch": [
+                        "SINGLE"
+                    ]
+                }
+            },
+            "request": {
+                "type": "IntentRequest",
+                "requestId": "amzn1.echo-api.request.b8b49fde-4370-423f-bbb0-dc7305b788a0",
+                "timestamp": "2018-12-03T00:33:58Z",
+                "locale": "es-MX",
+                "intent": {
+                    "name": "hello",
+                    "confirmationStatus": "NONE"
+                }
+            }
+        })
     }
 
-    fn req_with_slots() -> &'static str {
-        r#"{
-	"version": "1.0",
-	"session": {
-		"new": true,
-		"sessionId": "amzn1.echo-api.session.blahblahblah",
-		"application": {
-			"applicationId": "amzn1.ask.skill.testappliction"
-		},
-		"user": {
-			"userId": "amzn1.ask.account.longstringuseridentifier"
-		}
-	},
-	"context": {
-		"Display": {},
-		"System": {
-			"application": {
-				"applicationId": "amzn1.ask.skill.tehappz"
-			},
-			"user": {
-				"userId": "amzn1.ask.account.longstringuseridentifier"
-			},
-			"device": {
-				"deviceId": "amzn1.ask.device.testdevice",
-				"supportedInterfaces": {
-					"Display": {
-						"templateVersion": "1.0",
-						"markupVersion": "1.0"
-					}
-				}
-			},
-			"apiEndpoint": "https://api.amazonalexa.com",
-			"apiAccessToken": "teh.token.with-long-string-more-more-more-more"
-		},
-		"Viewport": {
-			"experiences": [
-				{
-					"arcMinuteWidth": 246,
-					"arcMinuteHeight": 144,
-					"canRotate": false,
-					"canResize": false
-				}
-			],
-			"shape": "RECTANGLE",
-			"pixelWidth": 1024,
-			"pixelHeight": 600,
-			"dpi": 160,
-			"currentPixelWidth": 1024,
-			"currentPixelHeight": 600,
-			"touch": [
-				"SINGLE"
-			]
-		}
-	},
-	"request": {
-		"type": "IntentRequest",
-		"requestId": "amzn1.echo-api.request.id",
-		"timestamp": "2018-12-08T05:37:32Z",
-		"locale": "en-US",
-		"intent": {
-			"name": "hello",
-			"confirmationStatus": "NONE",
-			"slots": {
-				"name": {
-					"name": "name",
-					"value": "bob",
-					"confirmationStatus": "NONE",
-					"source": "USER"
-				}
-			}
-		}
-	}
-}"#
+    fn default_french_req() -> serde_json::Value {
+        json!({
+            "version": "1.0",
+            "session": {
+                "new": true,
+                "sessionId": "amzn1.echo-api.session.abc123",
+                "application": {
+                    "applicationId": "amzn1.ask.skill.myappid"
+                },
+                "attributes": {
+                    "lastSpeech": "Jupiter has the shortest day of all the planets"
+                },
+                "user": {
+                    "userId": "amzn1.ask.account.theuserid"
+                }
+            },
+            "context": {
+                "System": {
+                    "application": {
+                        "applicationId": "amzn1.ask.skill.myappid"
+                    },
+                    "user": {
+                        "userId": "amzn1.ask.account.theuserid"
+                    },
+                    "device": {
+                        "deviceId": "amzn1.ask.device.superfakedevice",
+                        "supportedInterfaces": {}
+                    },
+                    "apiEndpoint": "https://api.amazonalexa.com",
+                    "apiAccessToken": "53kr14t.k3y.d4t4-otherstuff"
+                },
+                "Viewport": {
+                    "experiences": [
+                        {
+                            "arcMinuteWidth": 246,
+                            "arcMinuteHeight": 144,
+                            "canRotate": false,
+                            "canResize": false
+                        }
+                    ],
+                    "shape": "RECTANGLE",
+                    "pixelWidth": 1024,
+                    "pixelHeight": 600,
+                    "dpi": 160,
+                    "currentPixelWidth": 1024,
+                    "currentPixelHeight": 600,
+                    "touch": [
+                        "SINGLE"
+                    ]
+                }
+            },
+            "request": {
+                "type": "IntentRequest",
+                "requestId": "amzn1.echo-api.request.b8b49fde-4370-423f-bbb0-dc7305b788a0",
+                "timestamp": "2018-12-03T00:33:58Z",
+                "locale": "fr-CA",
+                "intent": {
+                    "name": "hello",
+                    "confirmationStatus": "NONE"
+                }
+            }
+        })
+    }
+
+    fn default_req() -> serde_json::Value {
+        json!({
+            "version": "1.0",
+            "session": {
+                "new": true,
+                "sessionId": "amzn1.echo-api.session.abc123",
+                "application": {
+                    "applicationId": "amzn1.ask.skill.myappid"
+                },
+                "attributes": {
+                    "lastSpeech": "Jupiter has the shortest day of all the planets"
+                },
+                "user": {
+                    "userId": "amzn1.ask.account.theuserid"
+                }
+            },
+            "context": {
+                "System": {
+                    "application": {
+                        "applicationId": "amzn1.ask.skill.myappid"
+                    },
+                    "user": {
+                        "userId": "amzn1.ask.account.theuserid"
+                    },
+                    "device": {
+                        "deviceId": "amzn1.ask.device.superfakedevice",
+                        "supportedInterfaces": {}
+                    },
+                    "apiEndpoint": "https://api.amazonalexa.com",
+                    "apiAccessToken": "53kr14t.k3y.d4t4-otherstuff"
+                },
+                "Viewport": {
+                    "experiences": [
+                        {
+                            "arcMinuteWidth": 246,
+                            "arcMinuteHeight": 144,
+                            "canRotate": false,
+                            "canResize": false
+                        }
+                    ],
+                    "shape": "RECTANGLE",
+                    "pixelWidth": 1024,
+                    "pixelHeight": 600,
+                    "dpi": 160,
+                    "currentPixelWidth": 1024,
+                    "currentPixelHeight": 600,
+                    "touch": [
+                        "SINGLE"
+                    ]
+                }
+            },
+            "request": {
+                "type": "IntentRequest",
+                "requestId": "amzn1.echo-api.request.b8b49fde-4370-423f-bbb0-dc7305b788a0",
+                "timestamp": "2018-12-03T00:33:58Z",
+                "locale": "en-US",
+                "intent": {
+                    "name": "hello",
+                    "confirmationStatus": "NONE"
+                }
+            }
+        })
+    }
+
+    fn req_with_slots() -> serde_json::Value {
+        json!({
+            "version": "1.0",
+            "session": {
+                "new": true,
+                "sessionId": "amzn1.echo-api.session.blahblahblah",
+                "application": {
+                    "applicationId": "amzn1.ask.skill.testappliction"
+                },
+                "user": {
+                    "userId": "amzn1.ask.account.longstringuseridentifier"
+                }
+            },
+            "context": {
+                "Display": {},
+                "System": {
+                    "application": {
+                        "applicationId": "amzn1.ask.skill.tehappz"
+                    },
+                    "user": {
+                        "userId": "amzn1.ask.account.longstringuseridentifier"
+                    },
+                    "device": {
+                        "deviceId": "amzn1.ask.device.testdevice",
+                        "supportedInterfaces": {
+                            "Display": {
+                                "templateVersion": "1.0",
+                                "markupVersion": "1.0"
+                            }
+                        }
+                    },
+                    "apiEndpoint": "https://api.amazonalexa.com",
+                    "apiAccessToken": "teh.token.with-long-string-more-more-more-more"
+                },
+                "Viewport": {
+                    "experiences": [
+                        {
+                            "arcMinuteWidth": 246,
+                            "arcMinuteHeight": 144,
+                            "canRotate": false,
+                            "canResize": false
+                        }
+                    ],
+                    "shape": "RECTANGLE",
+                    "pixelWidth": 1024,
+                    "pixelHeight": 600,
+                    "dpi": 160,
+                    "currentPixelWidth": 1024,
+                    "currentPixelHeight": 600,
+                    "touch": [
+                        "SINGLE"
+                    ]
+                }
+            },
+            "request": {
+                "type": "IntentRequest",
+                "requestId": "amzn1.echo-api.request.id",
+                "timestamp": "2018-12-08T05:37:32Z",
+                "locale": "en-US",
+                "intent": {
+                    "name": "hello",
+                    "confirmationStatus": "NONE",
+                    "slots": {
+                        "name": {
+                            "name": "name",
+                            "value": "bob",
+                            "confirmationStatus": "NONE",
+                            "source": "USER"
+                        }
+                    }
+                }
+            }
+        })
     }
 }
