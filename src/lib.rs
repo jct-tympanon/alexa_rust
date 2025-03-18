@@ -77,6 +77,12 @@
 pub mod request;
 pub mod response;
 
+#[cfg(feature = "audioplayer")]
+pub mod audioplayer;
+
+#[cfg(feature = "display")]
+pub mod display;
+
 pub use self::request::RequestEnvelope;
 pub use self::response::ResponseEnvelope;
 

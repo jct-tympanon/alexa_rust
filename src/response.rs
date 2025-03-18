@@ -1,7 +1,3 @@
-extern crate serde;
-extern crate serde_derive;
-extern crate serde_json;
-
 use serde::{Deserialize, Serialize};
 
 use std::collections::HashMap;
@@ -9,7 +5,7 @@ use std::collections::HashMap;
 use crate::declare_api_enum;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-enum Version {
+pub enum Version {
     #[serde(rename = "1.0")]
     V1_0,
     #[serde(untagged)]
@@ -27,6 +23,7 @@ impl ResponseEnvelope {
                 card: None,
                 reprompt: None,
                 should_end_session: should_end,
+                directives: None
             },
         }
     }
@@ -78,22 +75,39 @@ impl ResponseEnvelope {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ResponseEnvelope {
-    version: Version,
+    pub version: Version,
     #[serde(skip_serializing_if = "Option::is_none")]
-    session_attributes: Option<HashMap<String, String>>,
-    response: Response,
+    pub session_attributes: Option<HashMap<String, String>>,
+    pub response: Response,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Response {
     #[serde(skip_serializing_if = "Option::is_none")]
-    output_speech: Option<Speech>,
+    pub output_speech: Option<Speech>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    card: Option<Card>,
+    pub card: Option<Card>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    reprompt: Option<Reprompt>,
-    should_end_session: bool,
+    pub reprompt: Option<Reprompt>,
+    pub should_end_session: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub directives: Option<Vec<Directive>>
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "type")]
+pub enum Directive {
+    #[cfg(feature = "audioplayer")]
+    #[serde(rename = "AudioPlayer.Play")]
+    Play(crate::audioplayer::PlayDirective),
+
+    #[cfg(feature = "audioplayer")]
+    #[serde(rename = "AudioPlayer.Stop")]
+    Stop,
+
+    #[serde(untagged)]
+    Other(serde_json::Value)
 }
 
 declare_api_enum! {
@@ -114,13 +128,13 @@ declare_api_enum! {
 #[serde(rename_all = "camelCase")]
 pub struct Speech {
     #[serde(rename = "type")]
-    speech_type: SpeechType,
+    pub speech_type: SpeechType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    text: Option<String>,
+    pub text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    ssml: Option<String>,
+    pub ssml: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    play_behavior: Option<PlayBehavior>,
+    pub play_behavior: Option<PlayBehavior>,
 }
 
 impl Speech {
@@ -162,17 +176,17 @@ declare_api_enum! {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Card {
     #[serde(rename = "type")]
-    card_type: CardType,
+    pub card_type: CardType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    title: Option<String>,
+    pub title: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    content: Option<String>,
+    pub content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    text: Option<String>,
+    pub text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    image: Option<Image>,
+    pub image: Option<Image>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    permissions: Option<Vec<String>>,
+    pub permissions: Option<Vec<String>>,
 }
 
 impl Card {
@@ -228,16 +242,16 @@ impl Card {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Reprompt {
-    output_speech: Speech,
+    pub output_speech: Speech,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Image {
     #[serde(skip_serializing_if = "Option::is_none")]
-    small_image_url: Option<String>,
+    pub small_image_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    large_image_url: Option<String>,
+    pub large_image_url: Option<String>,
 }
 
 impl Image {

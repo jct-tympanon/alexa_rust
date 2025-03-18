@@ -1,14 +1,10 @@
-extern crate serde;
-extern crate serde_derive;
-extern crate serde_json;
-
 use serde::de::Visitor;
 use serde::{Deserialize, Serialize};
 
-use crate::declare_api_enum;
-
 use std::collections::HashMap;
 use std::convert::From;
+
+use crate::declare_api_enum;
 
 /// Request struct corresponding to the [Alexa spec](https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html#request-body-parameters)
 #[derive(Serialize, Deserialize, Debug, Clone)]

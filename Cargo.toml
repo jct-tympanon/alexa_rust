@@ -14,10 +14,15 @@ edition = "2021"
 # a no-op feature which allows us to insert uncompiled code into doctest examples.
 doctest = []
 
+# Include data types and functions for the audioplayer interface.
+audioplayer = [ "display" ]
+
+# Include data types and functions for the display interface.
+display = []
+
 [dependencies]
-serde = "^1"
+serde = { version = "^1", features = [ "derive" ] }
 serde_json = "^1"
-serde_derive = "^1"
 
 [dev-dependencies]
 lambda_runtime = "0.13.0"
