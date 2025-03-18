@@ -79,24 +79,23 @@ impl ResponseEnvelope {
 
 /// Response struct implementing the [Alexa JSON spec](https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html#response-parameters)
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ResponseEnvelope {
     version: String,
-    #[serde(rename = "sessionAttributes")]
     #[serde(skip_serializing_if = "Option::is_none")]
     session_attributes: Option<HashMap<String, String>>,
     response: Response,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Response {
-    #[serde(rename = "outputSpeech")]
     #[serde(skip_serializing_if = "Option::is_none")]
     output_speech: Option<Speech>,
     #[serde(skip_serializing_if = "Option::is_none")]
     card: Option<Card>,
     #[serde(skip_serializing_if = "Option::is_none")]
     reprompt: Option<Reprompt>,
-    #[serde(rename = "shouldEndSession")]
     should_end_session: bool,
 }
 
@@ -134,6 +133,7 @@ impl fmt::Display for PlayBehavior {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Speech {
     #[serde(rename = "type")]
     speech_type: String,
@@ -142,7 +142,6 @@ pub struct Speech {
     #[serde(skip_serializing_if = "Option::is_none")]
     ssml: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "playBehavior")]
     play_behavior: Option<String>,
 }
 
@@ -261,17 +260,16 @@ impl Card {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Reprompt {
-    #[serde(rename = "outputSpeech")]
     output_speech: Speech,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Image {
-    #[serde(rename = "smallImageUrl")]
     #[serde(skip_serializing_if = "Option::is_none")]
     small_image_url: Option<String>,
-    #[serde(rename = "largeImageUrl")]
     #[serde(skip_serializing_if = "Option::is_none")]
     large_image_url: Option<String>,
 }

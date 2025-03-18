@@ -16,9 +16,9 @@ pub struct RequestEnvelope {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Session {
     pub new: bool,
-    #[serde(rename = "sessionId")]
     pub session_id: String,
     pub attributes: Option<HashMap<String, String>>,
     pub application: Application,
@@ -26,36 +26,34 @@ pub struct Session {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Application {
-    #[serde(rename = "applicationId")]
     pub application_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct User {
-    #[serde(rename = "userId")]
     pub user_id: String,
-    #[serde(rename = "accessToken")]
     pub access_token: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Device {
-    #[serde(rename = "deviceId")]
     pub device_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Request {
     #[serde(rename = "type")]
-    pub reqtype: String,
-    #[serde(rename = "requestId")]
+    pub request_type: String,
     pub request_id: String,
     pub timestamp: String,
     pub locale: String,
     pub intent: Option<Intent>,
     pub reason: Option<String>,
-    #[serde(rename = "dialogState")]
     pub dialog_state: Option<String>,
 }
 
@@ -68,26 +66,25 @@ pub struct Context {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct System {
-    #[serde(rename = "apiAccessToken")]
     pub api_access_token: Option<String>,
     pub device: Option<Device>,
     pub application: Option<Application>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AudioPlayer {
     pub token: Option<String>,
-    #[serde(rename = "offsetInMilliseconds")]
     pub offset_in_milliseconds: Option<u64>,
-    #[serde(rename = "playerActivity")]
     pub player_activity: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Intent {
     pub name: String,
-    #[serde(rename = "confirmationStatus")]
     pub confirmation_status: Option<String>,
     pub slots: Option<HashMap<String, Slot>>,
 }
@@ -99,18 +96,18 @@ impl Intent {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Slot {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
-    #[serde(rename = "confirmationStatus")]
     pub confirmation_status: Option<String>,
     pub resolutions: Option<Resolution>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Resolution {
-    #[serde(rename = "resolutionsPerAuthority")]
     pub resolutions_per_authority: Vec<ResolutionsPerAuthority>,
 }
 
@@ -274,7 +271,7 @@ impl From<String> for Locale {
 impl RequestEnvelope {
     /// Extracts the request type from the request
     pub fn reqtype(&self) -> ReqType {
-        ReqType::from(&*self.request.reqtype)
+        ReqType::from(&*self.request.request_type)
     }
 
     /// Extracts the locale from the request
