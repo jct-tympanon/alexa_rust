@@ -9,11 +9,11 @@
 //!
 //! ```rust
 //! use lambda_runtime::{service_fn, Error, LambdaEvent};
-//! use alexa_sdk::{Request,Response};
+//! use alexa_sdk::{RequestEnvelope,ResponseEnvelope};
 //!
-//! async fn my_handler(event: LambdaEvent<Request>) -> Result<Response, Error> {
+//! async fn my_handler(event: LambdaEvent<RequestEnvelope>) -> Result<ResponseEnvelope, Error> {
 //!     let (_req, _ctx) = event.into_parts();
-//!     Ok(Response::simple("hello", "hello world"))
+//!     Ok(ResponseEnvelope::simple("hello", "hello world"))
 //! }
 //!
 //! # #[cfg(feature = "doctest")]
@@ -30,32 +30,32 @@
 //!
 //! ```rust
 //! use lambda_runtime::{service_fn, Error, LambdaEvent};
-//! use alexa_sdk::{Request,Response};
+//! use alexa_sdk::{RequestEnvelope,ResponseEnvelope};
 //! use alexa_sdk::request::{IntentType, Locale};
 //!
-//! fn handle_help(_req: &Request) -> Result<Response,Error> {
-//!     Ok(Response::simple("hello", "to say hello, tell me: say hello to someone"))
+//! fn handle_help(_req: &RequestEnvelope) -> Result<ResponseEnvelope,Error> {
+//!     Ok(ResponseEnvelope::simple("hello", "to say hello, tell me: say hello to someone"))
 //! }
 //!
-//! fn handle_hello(req: &Request) -> Result<Response,Error> {
+//! fn handle_hello(req: &RequestEnvelope) -> Result<ResponseEnvelope,Error> {
 //!     let res = match req.locale() {
-//!         Locale::AustralianEnglish => Response::simple("hello", "G'day mate"),
-//!         Locale::German => Response::simple("hello", "Hallo Welt"),
-//!         Locale::Japanese => Response::simple("hello", "こんにちは世界"),
+//!         Locale::AustralianEnglish => ResponseEnvelope::simple("hello", "G'day mate"),
+//!         Locale::German => ResponseEnvelope::simple("hello", "Hallo Welt"),
+//!         Locale::Japanese => ResponseEnvelope::simple("hello", "こんにちは世界"),
 //!         _ => if let Some(ref s) = req.slot_value("name") {
-//!             Response::simple("hello", (String::from("hello ") + s).as_str())
+//!             ResponseEnvelope::simple("hello", (String::from("hello ") + s).as_str())
 //!         } else {
-//!             Response::simple("hello", "hello world")
+//!             ResponseEnvelope::simple("hello", "hello world")
 //!         },
 //!     };
 //!     Ok(res)
 //! }
 //!
-//! fn handle_cancel(_req: &Request) -> Result<Response,Error> {
-//!     Ok(Response::end())
+//! fn handle_cancel(_req: &RequestEnvelope) -> Result<ResponseEnvelope,Error> {
+//!     Ok(ResponseEnvelope::end())
 //! }
 //!
-//! async fn my_handler(event: LambdaEvent<Request>) -> Result<Response,Error> {
+//! async fn my_handler(event: LambdaEvent<RequestEnvelope>) -> Result<ResponseEnvelope,Error> {
 //!     let (req, _ctx) = event.into_parts();
 //!     match req.intent() {
 //!         IntentType::Help => handle_help(&req),
@@ -77,5 +77,5 @@
 pub mod request;
 pub mod response;
 
-pub use self::request::Request;
-pub use self::response::Response;
+pub use self::request::RequestEnvelope;
+pub use self::response::ResponseEnvelope;

@@ -19,13 +19,13 @@ impl fmt::Display for Version {
     }
 }
 
-impl Response {
+impl ResponseEnvelope {
     /// Constructs a new response with only required elements
-    pub fn new(should_end: bool) -> Response {
-        Response {
+    pub fn new(should_end: bool) -> Self {
+        Self {
             version: Version::V1_0.to_string(),
             session_attributes: None,
-            body: ResBody {
+            response: Response {
                 output_speech: None,
                 card: None,
                 reprompt: None,
@@ -35,31 +35,31 @@ impl Response {
     }
 
     /// Constructs a basic plain response with a simple card
-    pub fn new_simple(title: &str, text: &str) -> Response {
-        Response::simple(title, text)
+    pub fn new_simple(title: &str, text: &str) -> Self {
+        Self::simple(title, text)
     }
 
     /// Constructs a basic plain response with a simple card
-    pub fn simple(title: &str, text: &str) -> Response {
-        Response::new(true)
+    pub fn simple(title: &str, text: &str) -> Self {
+        Self::new(true)
             .card(Card::simple(title, text))
             .speech(Speech::plain(text))
     }
 
     /// Constructs an empty response ending the session
-    pub fn end() -> Response {
-        Response::new(true)
+    pub fn end() -> Self {
+        Self::new(true)
     }
 
     /// adds a speach element to the response
     pub fn speech(mut self, speech: Speech) -> Self {
-        self.body.output_speech = Some(speech);
+        self.response.output_speech = Some(speech);
         self
     }
 
     /// adds a card to the response
     pub fn card(mut self, card: Card) -> Self {
-        self.body.card = Some(card);
+        self.response.card = Some(card);
         self
     }
 
@@ -79,17 +79,16 @@ impl Response {
 
 /// Response struct implementing the [Alexa JSON spec](https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html#response-parameters)
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Response {
+pub struct ResponseEnvelope {
     version: String,
     #[serde(rename = "sessionAttributes")]
     #[serde(skip_serializing_if = "Option::is_none")]
     session_attributes: Option<HashMap<String, String>>,
-    #[serde(rename = "response")]
-    body: ResBody,
+    response: Response,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ResBody {
+pub struct Response {
     #[serde(rename = "outputSpeech")]
     #[serde(skip_serializing_if = "Option::is_none")]
     output_speech: Option<Speech>,
@@ -308,13 +307,13 @@ mod tests {
 
     #[test]
     fn test_version() {
-        let r = Response::simple("hello, world", "hello, dude");
+        let r: ResponseEnvelope = ResponseEnvelope::simple("hello, world", "hello, dude");
         assert_eq!(r.version, "1.0");
     }
 
     #[test]
     fn test_builder() {
-        let mut res = Response::new(false)
+        let mut res = ResponseEnvelope::new(false)
             .card(Card::standard(
                 "foo",
                 "bar",
@@ -325,9 +324,9 @@ mod tests {
             ))
             .speech(Speech::plain("hello"));
         res.add_attribute("attr", "value");
-        let t = res.body.card.as_ref().unwrap().title.as_ref().unwrap();
+        let t = res.response.card.as_ref().unwrap().title.as_ref().unwrap();
         assert_eq!(t, "foo");
-        let txt = res.body.card.as_ref().unwrap().text.as_ref().unwrap();
+        let txt = res.response.card.as_ref().unwrap().text.as_ref().unwrap();
         assert_eq!(txt, "bar");
         let attr = res
             .session_attributes
@@ -340,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_builder_with_image_builder() {
-        let mut res = Response::new(false)
+        let mut res = ResponseEnvelope::new(false)
             .card(Card::standard(
                 "foo",
                 "bar",
@@ -350,12 +349,12 @@ mod tests {
             ))
             .speech(Speech::plain("hello"));
         res.add_attribute("attr", "value");
-        let t = res.body.card.as_ref().unwrap().title.as_ref().unwrap();
+        let t = res.response.card.as_ref().unwrap().title.as_ref().unwrap();
         assert_eq!(t, "foo");
-        let txt = res.body.card.as_ref().unwrap().text.as_ref().unwrap();
+        let txt = res.response.card.as_ref().unwrap().text.as_ref().unwrap();
         assert_eq!(txt, "bar");
         let small_img = res
-            .body
+            .response
             .card
             .as_ref()
             .unwrap()
@@ -366,7 +365,7 @@ mod tests {
             .as_ref()
             .unwrap();
         let large_img = res
-            .body
+            .response
             .card
             .as_ref()
             .unwrap()
@@ -392,22 +391,22 @@ mod tests {
     #[test]
     fn test_title() {
         let t = "hello, world";
-        let r = Response::simple(t, "hello, dude");
+        let r = ResponseEnvelope::simple(t, "hello, dude");
 
-        assert_eq!(r.body.card.unwrap().title.unwrap(), t);
+        assert_eq!(r.response.card.unwrap().title.unwrap(), t);
     }
 
     #[test]
     fn test_text() {
         let t = "hello, dude";
-        let r = Response::simple("hello,world", t);
+        let r = ResponseEnvelope::simple("hello,world", t);
 
-        assert_eq!(r.body.card.unwrap().content.unwrap(), t);
+        assert_eq!(r.response.card.unwrap().content.unwrap(), t);
     }
 
     #[test]
     fn test_should_end() {
-        let r = Response::simple("foo", "bar");
-        assert_eq!(r.body.should_end_session, true);
+        let r = ResponseEnvelope::simple("foo", "bar");
+        assert_eq!(r.response.should_end_session, true);
     }
 }

@@ -8,11 +8,10 @@ use std::convert::From;
 
 /// Request struct corresponding to the [Alexa spec](https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html#request-body-parameters)
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Request {
+pub struct RequestEnvelope {
     pub version: String,
     pub session: Option<Session>,
-    #[serde(rename = "request")]
-    pub body: ReqBody,
+    pub request: Request,
     pub context: Context,
 }
 
@@ -47,7 +46,7 @@ pub struct Device {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReqBody {
+pub struct Request {
     #[serde(rename = "type")]
     pub reqtype: String,
     #[serde(rename = "requestId")]
@@ -272,20 +271,20 @@ impl From<String> for Locale {
     }
 }
 
-impl Request {
+impl RequestEnvelope {
     /// Extracts the request type from the request
     pub fn reqtype(&self) -> ReqType {
-        ReqType::from(&*self.body.reqtype)
+        ReqType::from(&*self.request.reqtype)
     }
 
     /// Extracts the locale from the request
     pub fn locale(&self) -> Locale {
-        Locale::from(&*self.body.locale)
+        Locale::from(&*self.request.locale)
     }
 
     /// Extracts the intent from the request
     pub fn intent(&self) -> IntentType {
-        if let Some(ref i) = self.body.intent {
+        if let Some(ref i) = self.request.intent {
             match i.name.as_str() {
                 "AMAZON.HelpIntent" => IntentType::Help,
                 "AMAZON.CancelIntent" => IntentType::Cancel,
@@ -314,7 +313,7 @@ impl Request {
 
     /// retrieves the string value of named slot from the request, if it exists
     pub fn slot_value(&self, slot: &str) -> Option<String> {
-        self.body
+        self.request
             .intent
             .as_ref()?
             .get_slot(slot)?
@@ -344,56 +343,56 @@ mod tests {
 
     #[test]
     fn test_version() {
-        let req: Request = serde_json::from_value(default_req()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
         assert_eq!(req.version, "1.0");
     }
 
     #[test]
     fn test_locale() {
-        let req: Request = serde_json::from_value(default_req()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
         assert_eq!(req.locale(), Locale::AmericanEnglish);
     }
 
     #[test]
     fn test_is_english() {
-        let req: Request = serde_json::from_value(default_req()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
         assert!(req.locale().is_english());
     }
 
     #[test]
     fn test_is_spanish() {
-        let req: Request = serde_json::from_value(default_spanish_req()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(default_spanish_req()).unwrap();
         assert!(req.locale().is_spanish());
     }
 
     #[test]
     fn test_is_french() {
-        let req: Request = serde_json::from_value(default_french_req()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(default_french_req()).unwrap();
         assert!(req.locale().is_french());
     }
 
     #[test]
     fn test_intent() {
-        let req: Request = serde_json::from_value(default_req()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
         assert_eq!(req.intent(), IntentType::User(String::from("hello")));
     }
 
     #[test]
     fn test_slot() {
-        let req: Request = serde_json::from_value(req_with_slots()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(req_with_slots()).unwrap();
         assert_eq!(req.slot_value("name"), Some(String::from("bob")));
     }
 
     #[test]
     fn test_attribute() {
-        let req: Request = serde_json::from_value(default_req()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
         assert!(req.session.is_some());
         assert!(req.session.unwrap().attributes.is_some());
     }
 
     #[test]
     fn test_attribute_val() {
-        let req: Request = serde_json::from_value(default_req()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
         assert_eq!(
             req.attribute_value("lastSpeech"),
             Some(&String::from(
@@ -404,7 +403,7 @@ mod tests {
 
     #[test]
     fn deserialize_playback_intent() {
-        let req: Request = serde_json::from_value(with_playback_intent()).unwrap();
+        let req: RequestEnvelope = serde_json::from_value(with_playback_intent()).unwrap();
         assert_eq!(
             req.slot_value("object.name"),
             Some("in rainbows".into())
