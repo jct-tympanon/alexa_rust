@@ -9,21 +9,18 @@ declare_api_enum! {
         V1_0 => "1.0"
     }
 }
+impl Default for Version {
+    fn default() -> Self {
+        Self::V1_0
+    }
+}
 
 impl ResponseEnvelope {
     /// Constructs a new response with only required elements
     pub fn new(should_end: bool) -> Self {
-        Self {
-            version: Version::V1_0,
-            session_attributes: None,
-            response: Response {
-                output_speech: None,
-                card: None,
-                reprompt: None,
-                should_end_session: should_end,
-                directives: None
-            },
-        }
+        let mut env = Self::default();
+        env.response.should_end_session = should_end;
+        env
     }
 
     /// Constructs a basic plain response with a simple card
@@ -67,10 +64,17 @@ impl ResponseEnvelope {
             self.session_attributes = Some(h)
         }
     }
+
+    pub fn add_directive(&mut self, directive: Directive) {
+        match self.response.directives.as_mut() {
+            Some(vec) => vec.push(directive),
+            None => self.response.directives = Some(vec![directive]),
+        };
+    }
 }
 
 /// Response struct implementing the [Alexa JSON spec](https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html#response-parameters)
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ResponseEnvelope {
     pub version: Version,
@@ -91,6 +95,17 @@ pub struct Response {
     pub should_end_session: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub directives: Option<Vec<Directive>>
+}
+impl Default for Response {
+    fn default() -> Self {
+        Self {
+            should_end_session: true,
+            output_speech: None,
+            card: None,
+            reprompt: None,
+            directives: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -279,7 +294,29 @@ impl Default for Image {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
+    use crate::audioplayer::{AudioItem, PlayDirective, Stream};
+
     use super::*;
+
+    #[test]
+    fn default_response() {
+        assert_eq!(
+            serde_json::to_value(&ResponseEnvelope::default()).unwrap(),
+            serde_json::to_value(&ResponseEnvelope {
+                version: Version::V1_0,
+                session_attributes: None,
+                response: Response { 
+                    output_speech: None, 
+                    card: None, 
+                    reprompt: None, 
+                    should_end_session: true, 
+                    directives: None
+                }
+            }).unwrap()
+        );
+    }
 
     #[test]
     fn test_version() {
@@ -384,5 +421,57 @@ mod tests {
     fn test_should_end() {
         let r = ResponseEnvelope::simple("foo", "bar");
         assert_eq!(r.response.should_end_session, true);
+    }
+
+    #[test]
+    fn default_with_directives() {
+        let a = Directive::Play(PlayDirective {
+            play_behavior: PlayBehavior::ReplaceAll,
+            audio_item: AudioItem {
+                stream: Stream {
+                    offset_in_milliseconds: 0,
+                    token: "T".into(),
+                    expected_previous_token: None,
+                    url: "https://localhost/foo/bar".into(),
+                    caption_data: None
+                },
+                metadata: None,
+            }
+        });
+        let b = Directive::Stop;
+        let c = Directive::Other(json!({"type": "Do.Something"}));
+        let mut env = ResponseEnvelope::default();
+        env.add_directive(a);
+        env.add_directive(b);
+        env.add_directive(c);
+
+        assert_eq!(
+            json!({
+                "response": {
+                    "directives": [
+                        {
+                            "type": "AudioPlayer.Play",
+                            "audioItem": {
+                                "stream": {
+                                    "offsetInMilliseconds": 0,
+                                    "token": "T",
+                                    "url": "https://localhost/foo/bar"
+                                },
+                            },
+                            "playBehavior": "REPLACE_ALL"
+                        },
+                        {
+                            "type": "AudioPlayer.Stop"
+                        },
+                        {
+                            "type": "Do.Something"
+                        }
+                    ],
+                    "shouldEndSession": true
+                },
+                "version": "1.0"
+            }),
+            serde_json::to_value(env).unwrap()
+        )
     }
 }
