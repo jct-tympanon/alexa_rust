@@ -39,7 +39,7 @@ pub struct ImageInstance {
 }
 
 declare_api_enum! {
-    ImageSize["SCREAMING_SNAKE_CASE"] {
+    ImageSize => "SCREAMING_SNAKE_CASE" {
         XSmall,
         Small,
         Medium,

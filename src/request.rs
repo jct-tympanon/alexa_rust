@@ -3,8 +3,25 @@ use serde::{Deserialize, Serialize};
 
 use std::collections::HashMap;
 use std::convert::From;
+use std::fmt::Display;
 
 use crate::declare_api_enum;
+
+/// A helper macro to construct a [`Locale`] instance from a language and region:
+/// ```
+/// use ::alexa_sdk::locale;
+/// 
+/// assert_eq!(locale!(English, USA), serde_json::from_str("\"en-US\"").unwrap());
+/// ```
+#[macro_export]
+macro_rules! locale {
+    ($language:ident, $region:ident) => {
+        $crate::request::Locale { 
+            language: $crate::request::Language::$language,
+            region: Some($crate::request::Region::$region),
+        }
+    };
+}
 
 /// Request struct corresponding to the [Alexa spec](https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html#request-body-parameters)
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -136,7 +153,7 @@ pub struct Value {
 }
 
 declare_api_enum! {
-    RequestType["PascalCase"] {
+    RequestType {
         LaunchRequest,
         IntentRequest,
         SessionEndedRequest,
@@ -144,144 +161,112 @@ declare_api_enum! {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum IntentType {
-    #[serde(rename = "AMAZON.HelpIntent")]
-    Help,
-    #[serde(rename = "AMAZON.CancelIntent")]
-    Cancel,
-    #[serde(rename = "AMAZON.FallbackIntent")]
-    Fallback,
-    #[serde(rename = "AMAZON.LoopOffIntent")]
-    LoopOff,
-    #[serde(rename = "AMAZON.LoopOnIntent")]
-    LoopOn,
-    #[serde(rename = "AMAZON.NavigateHomeIntent")]
-    NavigateHome,
-    #[serde(rename = "AMAZON.NextIntent")]
-    Next,
-    #[serde(rename = "AMAZON.NoIntent")]
-    No,
-    #[serde(rename = "AMAZON.PauseIntent")]
-    Pause,
-    #[serde(rename = "AMAZON.PreviousIntent")]
-    Previous,
-    #[serde(rename = "AMAZON.RepeatIntent")]
-    Repeat,
-    #[serde(rename = "AMAZON.ResumeIntent")]
-    Resume,
-    #[serde(rename = "AMAZON.SelectIntent")]
-    Select,
-    #[serde(rename = "AMAZON.ShuffleOffIntent")]
-    ShuffleOff,
-    #[serde(rename = "AMAZON.ShuffleOnIntent")]
-    ShuffleOn,
-    #[serde(rename = "AMAZON.StartOverIntent")]
-    StartOver,
-    #[serde(rename = "AMAZON.StopIntent")]
-    Stop,
-    #[serde(rename = "AMAZON.YesIntent")]
-    Yes,
-    #[serde(untagged)]
-    Other(String),
+declare_api_enum! {
+    IntentType {
+        Help => "AMAZON.HelpIntent",
+        Cancel => "AMAZON.CancelIntent",
+        Fallback => "AMAZON.FallbackIntent",
+        LoopOff => "AMAZON.LoopOffIntent",
+        LoopOn => "AMAZON.LoopOnIntent",
+        NavigateHome => "AMAZON.NavigateHomeIntent",
+        Next => "AMAZON.NextIntent",
+        No => "AMAZON.NoIntent",
+        Pause => "AMAZON.PauseIntent",
+        Previous => "AMAZON.PreviousIntent",
+        Repeat => "AMAZON.RepeatIntent",
+        Resume => "AMAZON.ResumeIntent",
+        Select => "AMAZON.SelectIntent",
+        ShuffleOff => "AMAZON.ShuffleOffIntent",
+        ShuffleOn => "AMAZON.ShuffleOnIntent",
+        StartOver => "AMAZON.StartOverIntent",
+        Stop => "AMAZON.StopIntent",
+        Yes => "AMAZON.YesIntent"
+    }
 }
 
 /// Alexa standard locales
 #[derive(Debug, PartialEq, Clone)]
-pub enum Locale {
-    Italian,
-    German,
-    AustralianEnglish,
-    CanadianEnglish,
-    BritishEnglish,
-    IndianEnglish,
-    AmericanEnglish,
-    Japanese,
-    Spanish,
-    MexicanSpanish,
-    AmericanSpanish,
-    Hindi,
-    French,
-    CanadianFrench,
-    BrazilianPortuguese,
-    Other(String),
+pub struct Locale {
+    pub language: Language,
+    pub region: Option<Region>,
+}
+impl Locale {
+    /// Return a tuple of references to this Locale's fields, for convenience in pattern matching.
+    pub fn parts(&self) -> (&Language, Option<&Region>) {
+        (&self.language, self.region.as_ref())
+    }
+}
+
+declare_api_enum! {
+    Language {
+        Italian => "it",
+        German => "de",
+        English => "en",
+        Japanese => "ja",
+        Hindi => "hi",
+        Spanish => "es",
+        French => "fr",
+        Portuguese => "pt"
+    }
+}
+
+declare_api_enum! {
+    Region {
+        Australia => "AU",
+        Brazil => "BR",
+        Canada => "CA",
+        France => "FR",
+        Germany => "DE",
+        GreatBritain => "GB",
+        India => "IN",
+        Italy => "IT",
+        Japan => "JP",
+        Mexico => "MX",
+        Spain => "ES",
+        USA => "US"
+    }
 }
 
 impl Locale {
     /// returns true for all English speaking locals
     pub fn is_english(&self) -> bool {
-        match *self {
-            Locale::AmericanEnglish => true,
-            Locale::AustralianEnglish => true,
-            Locale::CanadianEnglish => true,
-            Locale::BritishEnglish => true,
-            Locale::IndianEnglish => true,
-            _ => false,
-        }
+        self.language == Language::English
     }
     pub fn is_french(&self) -> bool {
-        match *self {
-            Locale::French => true,
-            Locale::CanadianFrench => true,
-            _ => false,
-        }
+        self.language == Language::French
     }
     pub fn is_spanish(&self) -> bool {
-        match *self {
-            Locale::Spanish => true,
-            Locale::AmericanSpanish => true,
-            Locale::MexicanSpanish => true,
-            _ => false,
-        }
+        self.language == Language::Spanish
     }
-
-    pub fn as_str(&self) -> &str {
-        match *self {
-            Locale::Italian => "it-IT",
-            Locale::German => "de-DE",
-            Locale::AustralianEnglish => "en-AU",
-            Locale::CanadianEnglish => "en-CA",
-            Locale::BritishEnglish => "en-GB",
-            Locale::IndianEnglish => "en-IN",
-            Locale::AmericanEnglish => "en-US",
-            Locale::Japanese => "ja-JP",
-            Locale::Hindi => "hi-HI",
-            Locale::Spanish => "es-ES",
-            Locale::MexicanSpanish => "es-MX",
-            Locale::AmericanSpanish => "es-US",
-            Locale::French => "fr-FR",
-            Locale::CanadianFrench => "fr-CA",
-            Locale::BrazilianPortuguese => "pt-BR",
-            Locale::Other(ref s) => s,
+}
+impl Display for Locale {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.language.as_str())?;
+        match &self.region {
+            Some(r) => write!(f, "-{}", r.as_str()),
+            None => Ok(())
         }
     }
 }
 impl<S> From<S> for Locale where S: AsRef<str> {
-    fn from(s: S) -> Locale {
-        match s.as_ref() {
-            "it-IT" => Locale::Italian,
-            "de-DE" => Locale::German,
-            "en-AU" => Locale::AustralianEnglish,
-            "en-CA" => Locale::CanadianEnglish,
-            "en-GB" => Locale::BritishEnglish,
-            "en-IN" => Locale::IndianEnglish,
-            "en-US" => Locale::AmericanEnglish,
-            "ja-JP" => Locale::Japanese,
-            "hi-HI" => Locale::Hindi,
-            "es-ES" => Locale::Spanish,
-            "es-MX" => Locale::MexicanSpanish,
-            "es-US" => Locale::AmericanSpanish,
-            "fr-FR" => Locale::French,
-            "fr-CA" => Locale::CanadianFrench,
-            "pt-BR" => Locale::BrazilianPortuguese,
-            s @ _ => Locale::Other(s.to_string()),
+    fn from(s: S) -> Self {
+        let fields: Vec<&str> = s.as_ref().split('-').collect();
+        match fields.len() {
+            2 => Self {
+                language: Language::from(fields[0]),
+                region: Some(Region::from(fields[1])),
+            },
+            _ => Self {
+                language: Language::from(s.as_ref()),
+                region: None,
+            }
         }
     }
 }
 impl Serialize for Locale {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: serde::Serializer {
-        serializer.serialize_str(self.as_str())
+        serializer.serialize_str(&self.to_string())
     }
 }
 impl<'de> Deserialize<'de> for Locale {
@@ -293,7 +278,7 @@ impl<'de> Deserialize<'de> for Locale {
             type Value = Locale;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                write!(formatter, "a two-part locale string, {{language}}-{{country}}")
+                write!(formatter, "a two-part locale string, {{language}}-{{region}}")
             }
 
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -348,7 +333,9 @@ mod tests {
     #[test]
     fn test_locale() {
         let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
-        assert_eq!(req.request.locale, Locale::AmericanEnglish);
+        assert_eq!(req.request.locale, locale!(English, USA));
+        assert_eq!(req.request.locale.to_string(), "en-US");
+        assert_eq!(req.request.locale.parts(), (&Language::English, Some(&Region::USA)));
     }
 
     #[test]

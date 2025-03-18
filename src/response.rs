@@ -4,12 +4,10 @@ use std::collections::HashMap;
 
 use crate::declare_api_enum;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum Version {
-    #[serde(rename = "1.0")]
-    V1_0,
-    #[serde(untagged)]
-    Other(String)
+declare_api_enum! {
+    Version {
+        V1_0 => "1.0"
+    }
 }
 
 impl ResponseEnvelope {
@@ -111,13 +109,13 @@ pub enum Directive {
 }
 
 declare_api_enum! {
-    SpeechType["PascalCase"] {
+    SpeechType {
         PlainText,
         SSML
     }
 }
 declare_api_enum! {
-    PlayBehavior["SCREAMING_SNAKE_CASE"] {
+    PlayBehavior => "SCREAMING_SNAKE_CASE" {
         Enqueue,
         ReplaceAll,
         ReplaceEnqueued
@@ -165,7 +163,7 @@ impl Speech {
 }
 
 declare_api_enum! {
-    CardType["PascalCase"] {
+    CardType {
         Simple,
         Standard,
         LinkAccount,
