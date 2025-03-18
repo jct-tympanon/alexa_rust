@@ -38,7 +38,7 @@
 //! }
 //!
 //! fn handle_hello(req: &RequestEnvelope) -> Result<ResponseEnvelope,Error> {
-//!     let res = match req.locale() {
+//!     let res = match req.request.locale {
 //!         Locale::AustralianEnglish => ResponseEnvelope::simple("hello", "G'day mate"),
 //!         Locale::German => ResponseEnvelope::simple("hello", "Hallo Welt"),
 //!         Locale::Japanese => ResponseEnvelope::simple("hello", "こんにちは世界"),
@@ -56,11 +56,11 @@
 //! }
 //!
 //! async fn my_handler(event: LambdaEvent<RequestEnvelope>) -> Result<ResponseEnvelope,Error> {
-//!     let (req, _ctx) = event.into_parts();
-//!     match req.intent() {
-//!         IntentType::Help => handle_help(&req),
-//!         IntentType::User(_) => handle_hello(&req),
-//!         _ => handle_cancel (&req)
+//!     let (env, _ctx) = event.into_parts();
+//!     match env.intent_type() {
+//!         Some(IntentType::Help) => handle_help(&env),
+//!         Some(IntentType::Other(_)) => handle_hello(&env),
+//!         _ => handle_cancel (&env)
 //!     }
 //! }
 //! 
@@ -79,3 +79,19 @@ pub mod response;
 
 pub use self::request::RequestEnvelope;
 pub use self::response::ResponseEnvelope;
+
+#[macro_export]
+macro_rules! declare_api_enum {
+    ($rust_name:ident [$convention:literal] { $( $known_value:ident ),* }) => {
+        #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+        #[serde(rename_all = $convention)]
+        pub enum $rust_name {
+            $(
+                $known_value
+            ),*,
+            /// Any unrecognized value for this enum
+            #[serde(untagged)]
+            Other(String)
+        }
+    };
+}

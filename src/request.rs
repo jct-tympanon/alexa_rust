@@ -2,7 +2,11 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-use self::serde_derive::{Deserialize, Serialize};
+use serde::de::Visitor;
+use serde::{Deserialize, Serialize};
+
+use crate::declare_api_enum;
+
 use std::collections::HashMap;
 use std::convert::From;
 
@@ -48,10 +52,10 @@ pub struct Device {
 #[serde(rename_all = "camelCase")]
 pub struct Request {
     #[serde(rename = "type")]
-    pub request_type: String,
+    pub request_type: RequestType,
     pub request_id: String,
     pub timestamp: String,
-    pub locale: String,
+    pub locale: Locale,
     pub intent: Option<Intent>,
     pub reason: Option<String>,
     pub dialog_state: Option<String>,
@@ -85,7 +89,7 @@ pub struct AudioPlayer {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Intent {
-    pub name: String,
+    pub name: IntentType,
     pub confirmation_status: Option<String>,
     pub slots: Option<HashMap<String, Slot>>,
 }
@@ -135,63 +139,59 @@ pub struct Value {
     pub id: String,
 }
 
-/// Enumeration of Alexa request types
-/// Not comprehensive, ones not defined are put into the Other `String` value
-#[derive(Debug, PartialEq)]
-pub enum RequestType {
-    LaunchRequest,
-    IntentRequest,
-    SessionEndedRequest,
-    CanFulfillIntentRequest,
+declare_api_enum! {
+    RequestType["PascalCase"] {
+        LaunchRequest,
+        IntentRequest,
+        SessionEndedRequest,
+        CanFulfillIntentRequest
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum IntentType {
+    #[serde(rename = "AMAZON.HelpIntent")]
+    Help,
+    #[serde(rename = "AMAZON.CancelIntent")]
+    Cancel,
+    #[serde(rename = "AMAZON.FallbackIntent")]
+    Fallback,
+    #[serde(rename = "AMAZON.LoopOffIntent")]
+    LoopOff,
+    #[serde(rename = "AMAZON.LoopOnIntent")]
+    LoopOn,
+    #[serde(rename = "AMAZON.NavigateHomeIntent")]
+    NavigateHome,
+    #[serde(rename = "AMAZON.NextIntent")]
+    Next,
+    #[serde(rename = "AMAZON.NoIntent")]
+    No,
+    #[serde(rename = "AMAZON.PauseIntent")]
+    Pause,
+    #[serde(rename = "AMAZON.PreviousIntent")]
+    Previous,
+    #[serde(rename = "AMAZON.RepeatIntent")]
+    Repeat,
+    #[serde(rename = "AMAZON.ResumeIntent")]
+    Resume,
+    #[serde(rename = "AMAZON.SelectIntent")]
+    Select,
+    #[serde(rename = "AMAZON.ShuffleOffIntent")]
+    ShuffleOff,
+    #[serde(rename = "AMAZON.ShuffleOnIntent")]
+    ShuffleOn,
+    #[serde(rename = "AMAZON.StartOverIntent")]
+    StartOver,
+    #[serde(rename = "AMAZON.StopIntent")]
+    Stop,
+    #[serde(rename = "AMAZON.YesIntent")]
+    Yes,
+    #[serde(untagged)]
     Other(String),
 }
 
-impl<'a> From<&'a str> for RequestType {
-    fn from(s: &'a str) -> RequestType {
-        match s {
-            "LaunchRequest" => RequestType::LaunchRequest,
-            "IntentRequest" => RequestType::IntentRequest,
-            "SessionEndedRequest" => RequestType::SessionEndedRequest,
-            "CanFulfillIntentRequest" => RequestType::CanFulfillIntentRequest,
-            _ => RequestType::Other(s.to_string()),
-        }
-    }
-}
-
-impl From<String> for RequestType {
-    fn from(s: String) -> RequestType {
-        RequestType::from(s.as_str())
-    }
-}
-
-/// Enumeration of Alexa intent types
-/// Custom intents will be User enum values discrimiated by the `String` value
-#[derive(Debug, PartialEq)]
-pub enum IntentType {
-    None,
-    Help,
-    Cancel,
-    Fallback,
-    LoopOff,
-    LoopOn,
-    NavigateHome,
-    Next,
-    No,
-    Pause,
-    Previous,
-    Repeat,
-    Resume,
-    Select,
-    ShuffleOn,
-    ShuffleOff,
-    StartOver,
-    Stop,
-    Yes,
-    User(String),
-}
-
 /// Alexa standard locales
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Locale {
     Italian,
     German,
@@ -208,7 +208,7 @@ pub enum Locale {
     French,
     CanadianFrench,
     BrazilianPortuguese,
-    Unknown,
+    Other(String),
 }
 
 impl Locale {
@@ -238,11 +238,31 @@ impl Locale {
             _ => false,
         }
     }
-}
 
-impl<'a> From<&'a str> for Locale {
-    fn from(s: &'a str) -> Locale {
-        match s {
+    pub fn as_str(&self) -> &str {
+        match *self {
+            Locale::Italian => "it-IT",
+            Locale::German => "de-DE",
+            Locale::AustralianEnglish => "en-AU",
+            Locale::CanadianEnglish => "en-CA",
+            Locale::BritishEnglish => "en-GB",
+            Locale::IndianEnglish => "en-IN",
+            Locale::AmericanEnglish => "en-US",
+            Locale::Japanese => "ja-JP",
+            Locale::Hindi => "hi-HI",
+            Locale::Spanish => "es-ES",
+            Locale::MexicanSpanish => "es-MX",
+            Locale::AmericanSpanish => "es-US",
+            Locale::French => "fr-FR",
+            Locale::CanadianFrench => "fr-CA",
+            Locale::BrazilianPortuguese => "pt-BR",
+            Locale::Other(ref s) => s,
+        }
+    }
+}
+impl<S> From<S> for Locale where S: AsRef<str> {
+    fn from(s: S) -> Locale {
+        match s.as_ref() {
             "it-IT" => Locale::Italian,
             "de-DE" => Locale::German,
             "en-AU" => Locale::AustralianEnglish,
@@ -258,65 +278,49 @@ impl<'a> From<&'a str> for Locale {
             "fr-FR" => Locale::French,
             "fr-CA" => Locale::CanadianFrench,
             "pt-BR" => Locale::BrazilianPortuguese,
-            _ => Locale::Unknown,
+            s @ _ => Locale::Other(s.to_string()),
         }
     }
 }
+impl Serialize for Locale {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: serde::Serializer {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> Deserialize<'de> for Locale {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: serde::Deserializer<'de> {
 
-impl From<String> for Locale {
-    fn from(s: String) -> Locale {
-        Locale::from(s.as_str())
+        struct LocaleVisitor;
+        impl<'de> Visitor<'de> for LocaleVisitor {
+            type Value = Locale;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(formatter, "a two-part locale string, {{language}}-{{country}}")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where E: serde::de::Error, {
+                Ok(v.into())
+            }
+        }
+        
+        deserializer.deserialize_str(LocaleVisitor)
     }
 }
 
 impl RequestEnvelope {
-    /// Extracts the request type from the request
-    pub fn request_type(&self) -> RequestType {
-        RequestType::from(&*self.request.request_type)
-    }
-
-    /// Extracts the locale from the request
-    pub fn locale(&self) -> Locale {
-        Locale::from(&*self.request.locale)
-    }
-
-    /// Extracts the intent from the request
-    pub fn intent(&self) -> IntentType {
-        if let Some(ref i) = self.request.intent {
-            match i.name.as_str() {
-                "AMAZON.HelpIntent" => IntentType::Help,
-                "AMAZON.CancelIntent" => IntentType::Cancel,
-                "AMAZON.FallbackIntent" => IntentType::Fallback,
-                "AMAZON.LoopOffIntent" => IntentType::LoopOff,
-                "AMAZON.LoopOnIntent" => IntentType::LoopOn,
-                "AMAZON.NavigateHomeIntent" => IntentType::NavigateHome,
-                "AMAZON.NextIntent" => IntentType::Next,
-                "AMAZON.NoIntent" => IntentType::No,
-                "AMAZON.PauseIntent" => IntentType::Pause,
-                "AMAZON.PreviousIntent" => IntentType::Previous,
-                "AMAZON.RepeatIntent" => IntentType::Repeat,
-                "AMAZON.ResumeIntent" => IntentType::Resume,
-                "AMAZON.SelectIntent" => IntentType::Select,
-                "AMAZON.ShuffleOffIntent" => IntentType::ShuffleOff,
-                "AMAZON.ShuffleOnIntent" => IntentType::ShuffleOn,
-                "AMAZON.StartOverIntent" => IntentType::StartOver,
-                "AMAZON.StopIntent" => IntentType::Stop,
-                "AMAZON.YesIntent" => IntentType::Yes,
-                _ => IntentType::User(i.name.clone()),
-            }
-        } else {
-            IntentType::None
-        }
+    pub fn intent_type(&self) -> Option<&IntentType> {
+        self.request.intent.as_ref().map(|i| &i.name)
     }
 
     /// retrieves the string value of named slot from the request, if it exists
-    pub fn slot_value(&self, slot: &str) -> Option<String> {
+    pub fn slot_value(&self, slot: &str) -> Option<&String> {
         self.request
-            .intent
-            .as_ref()?
+            .intent.as_ref()?
             .get_slot(slot)?
-            .value
-            .clone()
+            .value.as_ref()
     }
 
     /// retrieves the attribute value with the given key, if it exists
@@ -348,37 +352,37 @@ mod tests {
     #[test]
     fn test_locale() {
         let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
-        assert_eq!(req.locale(), Locale::AmericanEnglish);
+        assert_eq!(req.request.locale, Locale::AmericanEnglish);
     }
 
     #[test]
     fn test_is_english() {
         let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
-        assert!(req.locale().is_english());
+        assert!(req.request.locale.is_english());
     }
 
     #[test]
     fn test_is_spanish() {
         let req: RequestEnvelope = serde_json::from_value(default_spanish_req()).unwrap();
-        assert!(req.locale().is_spanish());
+        assert!(req.request.locale.is_spanish());
     }
 
     #[test]
     fn test_is_french() {
         let req: RequestEnvelope = serde_json::from_value(default_french_req()).unwrap();
-        assert!(req.locale().is_french());
+        assert!(req.request.locale.is_french());
     }
 
     #[test]
     fn test_intent() {
         let req: RequestEnvelope = serde_json::from_value(default_req()).unwrap();
-        assert_eq!(req.intent(), IntentType::User(String::from("hello")));
+        assert_eq!(req.intent_type(), Some(&IntentType::Other(String::from("hello"))));
     }
 
     #[test]
     fn test_slot() {
         let req: RequestEnvelope = serde_json::from_value(req_with_slots()).unwrap();
-        assert_eq!(req.slot_value("name"), Some(String::from("bob")));
+        assert_eq!(req.slot_value("name"), Some(&String::from("bob")));
     }
 
     #[test]
@@ -404,7 +408,7 @@ mod tests {
         let req: RequestEnvelope = serde_json::from_value(with_playback_intent()).unwrap();
         assert_eq!(
             req.slot_value("object.name"),
-            Some("in rainbows".into())
+            Some(&String::from("in rainbows"))
         );
     }
 

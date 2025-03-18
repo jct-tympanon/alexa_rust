@@ -2,28 +2,25 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-use self::serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
+
 use std::collections::HashMap;
-use std::fmt;
 
+use crate::declare_api_enum;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 enum Version {
+    #[serde(rename = "1.0")]
     V1_0,
-}
-
-impl fmt::Display for Version {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = match *self {
-            Version::V1_0 => "1.0",
-        };
-        write!(f, "{}", s)
-    }
+    #[serde(untagged)]
+    Other(String)
 }
 
 impl ResponseEnvelope {
     /// Constructs a new response with only required elements
     pub fn new(should_end: bool) -> Self {
         Self {
-            version: Version::V1_0.to_string(),
+            version: Version::V1_0,
             session_attributes: None,
             response: Response {
                 output_speech: None,
@@ -81,7 +78,7 @@ impl ResponseEnvelope {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ResponseEnvelope {
-    version: String,
+    version: Version,
     #[serde(skip_serializing_if = "Option::is_none")]
     session_attributes: Option<HashMap<String, String>>,
     response: Response,
@@ -99,36 +96,17 @@ pub struct Response {
     should_end_session: bool,
 }
 
-enum SpeechType {
-    PlainText,
-    SSML,
-}
-
-impl fmt::Display for SpeechType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = match *self {
-            SpeechType::PlainText => "PlainText",
-            SpeechType::SSML => "SSML",
-        };
-        write!(f, "{}", s)
+declare_api_enum! {
+    SpeechType["PascalCase"] {
+        PlainText,
+        SSML
     }
 }
-
-/// Play behavior for output speech
-pub enum PlayBehavior {
-    Enqueue,
-    ReplaceAll,
-    ReplaceEnqueued,
-}
-
-impl fmt::Display for PlayBehavior {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = match *self {
-            PlayBehavior::Enqueue => "ENQUEUE",
-            PlayBehavior::ReplaceAll => "REPLACE_ALL",
-            PlayBehavior::ReplaceEnqueued => "REPLACE_ENQUEUED",
-        };
-        write!(f, "{}", s)
+declare_api_enum! {
+    PlayBehavior["SCREAMING_SNAKE_CASE"] {
+        Enqueue,
+        ReplaceAll,
+        ReplaceEnqueued
     }
 }
 
@@ -136,20 +114,20 @@ impl fmt::Display for PlayBehavior {
 #[serde(rename_all = "camelCase")]
 pub struct Speech {
     #[serde(rename = "type")]
-    speech_type: String,
+    speech_type: SpeechType,
     #[serde(skip_serializing_if = "Option::is_none")]
     text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     ssml: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    play_behavior: Option<String>,
+    play_behavior: Option<PlayBehavior>,
 }
 
 impl Speech {
     /// Constructs a plain text output speech
     pub fn plain(s: &str) -> Speech {
         Speech {
-            speech_type: SpeechType::PlainText.to_string(),
+            speech_type: SpeechType::PlainText,
             text: Some(String::from(s)),
             ssml: None,
             play_behavior: None,
@@ -159,7 +137,7 @@ impl Speech {
     /// Constructs an SSML output speech (with supplied SSML)
     pub fn ssml(s: &str) -> Speech {
         Speech {
-            speech_type: SpeechType::SSML.to_string(),
+            speech_type: SpeechType::SSML,
             ssml: Some(String::from(s)),
             text: None,
             play_behavior: None,
@@ -168,35 +146,23 @@ impl Speech {
 
     /// Adds play behavior to a speech object
     pub fn play_behavior(&mut self, behavior: PlayBehavior) {
-        self.play_behavior = Some(behavior.to_string());
+        self.play_behavior = Some(behavior);
     }
 }
 
-/// Types of cards for an Alexa response
-#[allow(dead_code)]
-pub enum CardType {
-    Simple,
-    Standard,
-    LinkAccount,
-    AskForPermissionsConsent,
-}
-
-impl fmt::Display for CardType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = match *self {
-            CardType::Simple => "Simple",
-            CardType::Standard => "Standard",
-            CardType::LinkAccount => "LinkAccount",
-            CardType::AskForPermissionsConsent => "AskForPermissionsConsent",
-        };
-        write!(f, "{}", s)
+declare_api_enum! {
+    CardType["PascalCase"] {
+        Simple,
+        Standard,
+        LinkAccount,
+        AskForPermissionsConsent
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Card {
     #[serde(rename = "type")]
-    card_type: String,
+    card_type: CardType,
     #[serde(skip_serializing_if = "Option::is_none")]
     title: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -213,7 +179,7 @@ impl Card {
     /// Constructs a simple card for an Alexa repsonse object
     pub fn simple(title: &str, text: &str) -> Card {
         Card {
-            card_type: CardType::Simple.to_string(),
+            card_type: CardType::Simple,
             title: Some(String::from(title)),
             content: Some(String::from(text)),
             text: None,
@@ -225,7 +191,7 @@ impl Card {
     /// Constructs a standard card for an Alexa response object
     pub fn standard(title: &str, text: &str, image: Image) -> Card {
         Card {
-            card_type: CardType::Standard.to_string(),
+            card_type: CardType::Standard,
             title: Some(String::from(title)),
             content: None,
             text: Some(String::from(text)),
@@ -237,7 +203,7 @@ impl Card {
     /// Constructs a link account card for the Alexa response object
     pub fn link_account() -> Card {
         Card {
-            card_type: CardType::LinkAccount.to_string(),
+            card_type: CardType::LinkAccount,
             title: None,
             content: None,
             text: None,
@@ -249,7 +215,7 @@ impl Card {
     /// Constructs a permissions request card with the requested permissions
     pub fn ask_for_permission(permissions: Vec<String>) -> Card {
         Card {
-            card_type: CardType::AskForPermissionsConsent.to_string(),
+            card_type: CardType::AskForPermissionsConsent,
             title: None,
             content: None,
             text: None,
@@ -306,7 +272,7 @@ mod tests {
     #[test]
     fn test_version() {
         let r: ResponseEnvelope = ResponseEnvelope::simple("hello, world", "hello, dude");
-        assert_eq!(r.version, "1.0");
+        assert_eq!(r.version, Version::V1_0);
     }
 
     #[test]
