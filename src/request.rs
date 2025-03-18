@@ -57,11 +57,12 @@ pub struct Request {
     pub dialog_state: Option<String>,
 }
 
+/// Partial mapping of Context, 
+/// see https://developer.amazon.com/en-US/docs/alexa/custom-skills/request-and-response-json-reference.html#context-object
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "PascalCase")] 
 pub struct Context {
-    #[serde(rename = "System")]
     pub system: System,
-    #[serde(rename = "AudioPlayer")]
     pub audio_player: Option<AudioPlayer>,
 }
 
