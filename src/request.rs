@@ -102,7 +102,8 @@ impl Intent {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Slot {
     pub name: String,
-    pub value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
     #[serde(rename = "confirmationStatus")]
     pub confirmation_status: Option<String>,
     pub resolutions: Option<Resolution>,
@@ -313,15 +314,12 @@ impl Request {
 
     /// retrieves the string value of named slot from the request, if it exists
     pub fn slot_value(&self, slot: &str) -> Option<String> {
-        Some(
-            self.body
-                .intent
-                .as_ref()?
-                .get_slot(slot)
-                .as_ref()?
-                .value
-                .clone(),
-        )
+        self.body
+            .intent
+            .as_ref()?
+            .get_slot(slot)?
+            .value
+            .clone()
     }
 
     /// retrieves the attribute value with the given key, if it exists
@@ -401,6 +399,15 @@ mod tests {
             Some(&String::from(
                 "Jupiter has the shortest day of all the planets"
             ))
+        );
+    }
+
+    #[test]
+    fn deserialize_playback_intent() {
+        let req: Request = serde_json::from_value(with_playback_intent()).unwrap();
+        assert_eq!(
+            req.slot_value("object.name"),
+            Some("in rainbows".into())
         );
     }
 
@@ -664,6 +671,163 @@ mod tests {
                             "value": "bob",
                             "confirmationStatus": "NONE",
                             "source": "USER"
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    /// a live example with redacted identifiers.
+    fn with_playback_intent() -> serde_json::Value {
+        json!({
+            "version": "1.0",
+            "session": {
+                "new": true,
+                "sessionId": "amzn1.echo-api.session.SESSION",
+                "application": {
+                    "applicationId": "amzn1.ask.skill.APP"
+                },
+                "attributes": {},
+                "user": {
+                    "userId": "amzn1.ask.account.USER"
+                }
+            },
+            "context": {
+                "Viewports": [
+                    {
+                        "type": "APL",
+                        "id": "medHub",
+                        "shape": "RECTANGLE",
+                        "dpi": 160,
+                        "presentationType": "OVERLAY",
+                        "canRotate": false,
+                        "configuration": {
+                            "current": {
+                                "mode": "HUB",
+                                "video": {
+                                    "codecs": [
+                                        "H_264_42",
+                                        "H_264_41"
+                                    ]
+                                },
+                                "size": {
+                                    "type": "DISCRETE",
+                                    "pixelWidth": 1280,
+                                    "pixelHeight": 800
+                                }
+                            }
+                        }
+                    }
+                ],
+                "AudioPlayer": {
+                    "playerActivity": "IDLE"
+                },
+                "Viewport": {
+                    "experiences": [
+                        {
+                            "arcMinuteWidth": 221,
+                            "arcMinuteHeight": 162,
+                            "canRotate": false,
+                            "canResize": false
+                        }
+                    ],
+                    "mode": "HUB",
+                    "shape": "RECTANGLE",
+                    "pixelWidth": 1280,
+                    "pixelHeight": 800,
+                    "dpi": 160,
+                    "currentPixelWidth": 1280,
+                    "currentPixelHeight": 800,
+                    "touch": [
+                        "SINGLE"
+                    ],
+                    "keyboard": [
+                        "DIRECTION"
+                    ],
+                    "video": {
+                        "codecs": [
+                            "H_264_42",
+                            "H_264_41"
+                        ]
+                    }
+                },
+                "Extensions": {
+                    "available": {
+                        "aplext:backstack:10": {}
+                    }
+                },
+                "System": {
+                    "application": {
+                        "applicationId": "amzn1.ask.skill.APP"
+                    },
+                    "user": {
+                        "userId": "amzn1.ask.account.USER"
+                    },
+                    "device": {
+                        "deviceId": "amzn1.ask.device.DEVICE",
+                        "supportedInterfaces": {
+                            "AudioPlayer": {}
+                        }
+                    },
+                    "apiEndpoint": "https://api.amazonalexa.com",
+                    "apiAccessToken": "SECRET"
+                }
+            },
+            "request": {
+                "type": "IntentRequest",
+                "requestId": "amzn1.echo-api.request.REQUEST",
+                "locale": "en-US",
+                "timestamp": "2025-03-17T23:27:29Z",
+                "intent": {
+                    "name": "AMAZON.PlaybackAction<object@MusicCreativeWork>",
+                    "confirmationStatus": "NONE",
+                    "slots": {
+                        "object.era": {
+                            "name": "object.era",
+                            "confirmationStatus": "NONE"
+                        },
+                        "object.name": {
+                            "name": "object.name",
+                            "value": "in rainbows",
+                            "confirmationStatus": "NONE",
+                            "source": "USER",
+                            "slotValue": {
+                                "type": "Simple",
+                                "value": "in rainbows"
+                            }
+                        },
+                        "object.sort": {
+                            "name": "object.sort",
+                            "confirmationStatus": "NONE"
+                        },
+                        "object.byArtist.name": {
+                            "name": "object.byArtist.name",
+                            "confirmationStatus": "NONE"
+                        },
+                        "object.select": {
+                            "name": "object.select",
+                            "confirmationStatus": "NONE"
+                        },
+                        "object.type": {
+                            "name": "object.type",
+                            "confirmationStatus": "NONE"
+                        },
+                        "object.genre": {
+                            "name": "object.genre",
+                            "confirmationStatus": "NONE"
+                        },
+                        "object.owner.name": {
+                            "name": "object.owner.name",
+                            "confirmationStatus": "NONE"
+                        },
+                        "object.composer.name": {
+                            "name": "object.composer.name",
+                            "confirmationStatus": "NONE"
+                        },
+                        "object.contentSource": {
+                            "name": "object.contentSource",
+                            "confirmationStatus": "NONE"
                         }
                     }
                 }
