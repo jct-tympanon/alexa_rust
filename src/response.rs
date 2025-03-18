@@ -100,15 +100,15 @@ pub struct Response {
 }
 
 enum SpeechType {
-    Plain,
-    Ssml,
+    PlainText,
+    SSML,
 }
 
 impl fmt::Display for SpeechType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let s = match *self {
-            SpeechType::Plain => "PlainText",
-            SpeechType::Ssml => "SSML",
+            SpeechType::PlainText => "PlainText",
+            SpeechType::SSML => "SSML",
         };
         write!(f, "{}", s)
     }
@@ -149,7 +149,7 @@ impl Speech {
     /// Constructs a plain text output speech
     pub fn plain(s: &str) -> Speech {
         Speech {
-            speech_type: SpeechType::Plain.to_string(),
+            speech_type: SpeechType::PlainText.to_string(),
             text: Some(String::from(s)),
             ssml: None,
             play_behavior: None,
@@ -159,7 +159,7 @@ impl Speech {
     /// Constructs an SSML output speech (with supplied SSML)
     pub fn ssml(s: &str) -> Speech {
         Speech {
-            speech_type: SpeechType::Ssml.to_string(),
+            speech_type: SpeechType::SSML.to_string(),
             ssml: Some(String::from(s)),
             text: None,
             play_behavior: None,
@@ -178,7 +178,7 @@ pub enum CardType {
     Simple,
     Standard,
     LinkAccount,
-    AskForPermission,
+    AskForPermissionsConsent,
 }
 
 impl fmt::Display for CardType {
@@ -187,7 +187,7 @@ impl fmt::Display for CardType {
             CardType::Simple => "Simple",
             CardType::Standard => "Standard",
             CardType::LinkAccount => "LinkAccount",
-            CardType::AskForPermission => "AskForPermissonConsent",
+            CardType::AskForPermissionsConsent => "AskForPermissionsConsent",
         };
         write!(f, "{}", s)
     }
@@ -249,7 +249,7 @@ impl Card {
     /// Constructs a permissions request card with the requested permissions
     pub fn ask_for_permission(permissions: Vec<String>) -> Card {
         Card {
-            card_type: CardType::AskForPermission.to_string(),
+            card_type: CardType::AskForPermissionsConsent.to_string(),
             title: None,
             content: None,
             text: None,
