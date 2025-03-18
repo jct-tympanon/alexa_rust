@@ -138,7 +138,7 @@ pub struct Value {
 /// Enumeration of Alexa request types
 /// Not comprehensive, ones not defined are put into the Other `String` value
 #[derive(Debug, PartialEq)]
-pub enum ReqType {
+pub enum RequestType {
     LaunchRequest,
     IntentRequest,
     SessionEndedRequest,
@@ -146,21 +146,21 @@ pub enum ReqType {
     Other(String),
 }
 
-impl<'a> From<&'a str> for ReqType {
-    fn from(s: &'a str) -> ReqType {
+impl<'a> From<&'a str> for RequestType {
+    fn from(s: &'a str) -> RequestType {
         match s {
-            "LaunchRequest" => ReqType::LaunchRequest,
-            "IntentRequest" => ReqType::IntentRequest,
-            "SessionEndedRequest" => ReqType::SessionEndedRequest,
-            "CanFulfillIntentRequest" => ReqType::CanFulfillIntentRequest,
-            _ => ReqType::Other(s.to_string()),
+            "LaunchRequest" => RequestType::LaunchRequest,
+            "IntentRequest" => RequestType::IntentRequest,
+            "SessionEndedRequest" => RequestType::SessionEndedRequest,
+            "CanFulfillIntentRequest" => RequestType::CanFulfillIntentRequest,
+            _ => RequestType::Other(s.to_string()),
         }
     }
 }
 
-impl From<String> for ReqType {
-    fn from(s: String) -> ReqType {
-        ReqType::from(s.as_str())
+impl From<String> for RequestType {
+    fn from(s: String) -> RequestType {
+        RequestType::from(s.as_str())
     }
 }
 
@@ -271,8 +271,8 @@ impl From<String> for Locale {
 
 impl RequestEnvelope {
     /// Extracts the request type from the request
-    pub fn reqtype(&self) -> ReqType {
-        ReqType::from(&*self.request.request_type)
+    pub fn request_type(&self) -> RequestType {
+        RequestType::from(&*self.request.request_type)
     }
 
     /// Extracts the locale from the request

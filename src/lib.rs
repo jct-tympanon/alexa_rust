@@ -1,7 +1,7 @@
 //! # Alexa SDK
 //! 
 //! `alexa_sdk` implements stucts corresponding to the [Alexa JSON specification](https://developer.amazon.com/docs/custom-skills/request-and-response-json-reference.html)
-//! along with helper functions for common uses of the  `Request` and `Response` objects.
+//! along with helper functions for common uses of the  `RequestEnvelope` and `ResponseEnvelope` objects.
 //! 
 //! ## Usage
 //! 
