@@ -32,7 +32,7 @@ pub struct AudioItem {
 pub struct Stream {
     pub url: String,
     pub token: String,
-    pub offset_in_milliseconds: u64,
+    pub offset_in_milliseconds: i64, // should be non-zero positive, but Alexa has been observed to send -1 for this value.
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expected_previous_token: Option<String>,
