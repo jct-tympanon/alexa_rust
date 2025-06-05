@@ -95,7 +95,7 @@ pub struct System {
 #[serde(rename_all = "camelCase")]
 pub struct AudioPlayer {
     pub token: Option<String>,
-    pub offset_in_milliseconds: Option<u64>,
+    pub offset_in_milliseconds: Option<i64>, // should be non-zero positive, but Alexa has been observed to send -1 for this value.
     pub player_activity: Option<String>,
 }
 
